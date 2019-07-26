@@ -28,7 +28,9 @@ class UniformInitialize():
         while correct.sum() > 0:
 
             l = correct.sum()
-            USample = Unif.sample((l,*x.shape[1:])).cuda()
+            USample = Unif.sample((l,*x.shape[1:]))
+            if torch.cuda.is_available():
+                USample = USample.cuda()
             xpert[correct] = x[correct] + 1.01**k*dt*USample
             xpert.clamp_(*bounds)
             correct = criterion(xpert,y)
@@ -51,7 +53,7 @@ class GaussianInitialize():
         while correct.sum()>0:
             l = correct.sum()
             xpert[correct] = x[correct] + (1.01)**k*dt*torch.randn(l,*xpert.shape[1:],
-                                                        device=xpert.device).cuda()
+                                                        device=xpert.device)
             xpert.clamp_(*bounds)
             correct = criterion(xpert,y)
 

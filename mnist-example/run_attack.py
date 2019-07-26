@@ -147,7 +147,8 @@ for i, (x, y) in enumerate(loader):
     print('Batch %2d/%d:'%(i+1,len(loader)))
 
     Nb = len(y)
-    x, y = x.cuda(), y.cuda()
+    if has_cuda:
+        x, y = x.cuda(), y.cuda()
 
     xstart = init_attack(x,y,criterion)
     xpert = attack(x,xstart,y)

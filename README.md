@@ -8,7 +8,7 @@ misclassification. In this work, we propose an attack methodology catered not on
 ## Implementation details
 Code is written in Python 3 and PyTorch 1.0. The implementation takes advantage of the GPU: a batch of images can be attacked at a given time. Hyperparameters are the defaults for the MNIST, CIFAR10, and ImageNet-1k datasets.
 
-We provide a pre-trained MNIST model, with an example attack provided in `MNIST_example.py`. The attack is implemented as a class in `proxlogbarrier.py`. The code is simple enough that it should be transferrable to TensorFlow if necessary.
+We provide a pre-trained MNIST model (LeNet), with an example attack provided in `mnist-example/run_attack.py`. The attack is implemented as a class in `proxlogbarrier_Top1.py`. The Top5 version is included as well.
 
 ### Citation
 If you find the ProxLogBarrier attack useful in your scientific work, please cite as

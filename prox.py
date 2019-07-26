@@ -49,7 +49,7 @@ class L1NormProx(nn.Module):
         s = u-x
         signS = th.sign(s)
         boolKeep = abs(s) > lbd
-        SoftT = th.zeros_like(u).cuda()
+        SoftT = th.zeros_like(u)
         SoftT[boolKeep] = signS[boolKeep]
         proxL1 = x + SoftT
         return proxL1
