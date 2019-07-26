@@ -12,7 +12,7 @@ sys.path.append('../')
 
 from ProxLogBarrierAttack.InitMethods import GaussianInitialize, UniformInitialize
 from ProxLogBarrierAttack.proxlogbarrier_Top1 import Top1Criterion, Attack
-#from proxlogbarrier_Top5 import Top5Criterion, Attack
+#from ProxLogBarrierAttack.proxlogbarrier_Top5 import Top5Criterion, Attack
 
 from model import LeNet
 
