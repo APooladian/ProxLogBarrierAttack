@@ -2,8 +2,7 @@ import torch as th
 import torch.nn as nn
 import numpy as np
 from torch.autograd import grad
-from ProximalLogBarrier.simplex import L1BallProj
-
+from ProxLogBarrierAttack.simplex import L1BallProj
 
 class L0NormProx_Batch(nn.Module):
     def __init__(self):
