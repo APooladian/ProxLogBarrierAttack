@@ -1,5 +1,5 @@
 # ProxLogBarrierAttack
-Public repository for the ProxLogBarrier attack, described in [A principled approach for generating adversarial images under non-smooth dissimilarity metrics](https://arxiv.org/abs/XXXX.XXXXX).
+Public repository for the ProxLogBarrier attack, described in [A principled approach for generating adversarial images under non-smooth dissimilarity metrics](https://arxiv.org/abs/1908.01667).
 
 Abstract: Deep neural networks perform well on real world data, but are prone to
 adversarial perturbations: small changes in the input easily lead to
@@ -16,10 +16,10 @@ If you find the ProxLogBarrier attack useful in your scientific work, please cit
 @article{pooladian2019proxlogbarrier,
   title={A principled approach for generating adversarial images under non-smooth dissimilarity metrics},
   author={Pooladian, Aram-Alexandre and Finlay, Chris and Hoheisel, Tim and Oberman, Adam M.},
-  journal={arXiv preprint arXiv:XXXX.XXXXX},
+  journal={arXiv preprint arXiv:1908.01667},
   year={2019},
-  url={http://arxiv.org/abs/XXXX.XXXXX},
+  url={http://arxiv.org/abs/1908.01667},
   archivePrefix={arXiv},
-  eprint={XXXX.XXXXX},
+  eprint={1908.01667},
 }
 ```
