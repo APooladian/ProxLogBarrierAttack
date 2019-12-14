@@ -9,7 +9,7 @@ from torch.autograd import grad
 import time
 
 
-from .prox import L0NormProx_Batch, LinfNormProx, L2NormProx_Batch
+from .prox import L0NormProx_Batch, LinfNormProx, L2NormProx_Batch, L1NormProx
 
 def Top1Criterion(x,y,model):
     return model(x).topk(1)[1].view(-1) == y
@@ -77,6 +77,8 @@ class Attack():
             proxFunc = L2NormProx_Batch()
         elif norm == np.inf:
             proxFunc = LinfNormProx()
+        elif norm == 1:
+            proxFunc = L1NormProx()
 
         for k in range(max_outer):
             alpha = alpha0*beta**k
@@ -96,7 +98,7 @@ class Attack():
                         yPert = xpert[update].view(Nb_,-1) -dtz[update].view(-1,1) * g[update].view(Nb_,-1)
                         y_proxd = proxFunc(yPert,xorig[update].view(Nb_,-1),muz[update])
                         xpert[update] = y_proxd.view(Nb_,*imshape).clamp_(*bounds)
-                    elif norm == np.inf:
+                    elif norm in [1,np.inf]:
                         Nb_ = xpert[update].shape[0]
                         yPert = xpert[update].view(Nb_,-1) -dtz[update].view(-1,1) * g[update].view(Nb_,-1)
                         y_proxd = proxFunc(yPert,xorig[update].view(Nb_,-1),T)

@@ -10,7 +10,7 @@ from torch.utils.data import Subset
 
 sys.path.append('../')
 
-from ProxLogBarrierAttack.InitMethods import GaussianInitialize, UniformInitialize
+from ProxLogBarrierAttack.InitMethods import GaussianInitialize, UniformInitialize, SafetyInitialize
 from ProxLogBarrierAttack.proxlogbarrier_Top1 import Top1Criterion, Attack
 #from ProxLogBarrierAttack.proxlogbarrier_Top5 import Top5Criterion, Attack
 
@@ -31,7 +31,7 @@ groups2.add_argument('--batch-size', type=int, default=100,metavar='N',
 groups2.add_argument('--save-images', action='store_true', default=False,
         help='save perturbed images to a npy file (default: False)')
 groups2.add_argument('--norm', type=str, default='L2',metavar='NORM',
-        choices=['L2','Linf','L0'],
+        choices=['L2','Linf','L0','L1'],
         help='The dissimilarity metrics between images. (default: "L2")')
 groups2.add_argument('--init-type',type=str,default='gaussian',
         choices=['gaussian','uniform'])
@@ -87,6 +87,9 @@ loader = torch.utils.data.DataLoader(
                     subset,
                     batch_size=args.batch_size, shuffle=False,
                     num_workers=4, pin_memory=has_cuda)
+loaderOneByOne = torch.utils.data.DataLoader(
+                    subset, batch_size=1,shuffle=False,
+                    num_workers=4, pin_memory=has_cuda)
 
 # Retrieve pre trained model
 classes = 10
@@ -106,6 +109,8 @@ elif args.norm=='Linf':
     norm = np.inf
 elif args.norm == 'L0':
     norm = 0
+elif args.norm == 'L1':
+    norm = 1
 
 if has_cuda:
     model = model.cuda()
@@ -124,10 +129,13 @@ attack = Attack(model, norm=norm, **params)
 d0 = torch.full((args.num_images,),np.inf)
 d2 = torch.full((args.num_images,),np.inf)
 dinf = torch.full((args.num_images,),np.inf)
+d1 = torch.full((args.num_images,),np.inf)
+
 if has_cuda:
     d0 = d0.cuda()
     d2 = d2.cuda()
     dinf = dinf.cuda()
+    d1 = d1.cuda()
 
 if args.save_images:
     chan, height, width = 1,28,28 #modify for other datasets
@@ -143,6 +151,28 @@ elif args.init_type == 'gaussian':
     init_attack = GaussianInitialize(model=model)
 
 K = 0
+## make safety list of images
+ImsList = torch.zeros(10,1,28,28).cuda() ##change based on img size
+ysList = []
+
+for i, (x,y) in enumerate(loaderOneByOne):
+    nclasses = 0
+    x,y = x.cuda(), y.cuda()
+    evalcrit=criterion(x,y)
+    if evalcrit:
+        if y in ysList:
+            continue
+        else:
+            ysList.append(y)
+            ImsList[y.cpu().item()] = x
+            nclasses += 1
+
+    if nclasses == 10:
+        break
+
+print(model(ImsList))
+safety = SafetyInitialize(model=model,TrainingIms=ImsList)
+
 for i, (x, y) in enumerate(loader):
     print('Batch %2d/%d:'%(i+1,len(loader)))
 
@@ -151,12 +181,15 @@ for i, (x, y) in enumerate(loader):
         x, y = x.cuda(), y.cuda()
 
     xstart = init_attack(x,y,criterion)
-    xpert = attack(x,xstart,y)
+    xstartNew = safety(xstart,x,y)
+
+    xpert = attack(x,xstartNew,y)
 
     diff = x - xpert.detach()
     l0 = diff.view(Nb, -1).norm(p=0, dim=-1)
     l2 = diff.view(Nb, -1).norm(p=2, dim=-1)
     linf = diff.view(Nb, -1).norm(p=np.inf, dim=-1)
+    l1 = diff.view(Nb,-1).norm(p=1,dim=-1)
 
     ix = torch.arange(K,K+Nb, device=x.device)
 
@@ -166,6 +199,7 @@ for i, (x, y) in enumerate(loader):
     d0[ix] = l0
     d2[ix] = l2
     dinf[ix] = linf
+    d1[ix] = l1
 
     K+=Nb
 
@@ -178,6 +212,9 @@ elif args.norm=='Linf':
 elif args.norm == 'L0':
     md = d0.median()
     mx = d0.max()
+elif args.norm == 'L1':
+    md = d1.median()
+    mx = d1.max()
 
 print('\nDone. Statistics in %s norm:'%args.norm)
 print('  Median adversarial distance: %.3g'%md)
@@ -188,7 +225,8 @@ st = 'proxlogbarrier-'+args.norm
 dists = {'index':Ix.cpu().numpy(),
          'l0':d0.cpu().numpy(),
          'l2':d2.cpu().numpy(),
-         'linf':dinf.cpu().numpy()}
+         'linf':dinf.cpu().numpy(),
+         'l1': d1.cpu().numpy()}
 
 if args.save_images:
     dists['perturbed'] = PerturbedImages.cpu().numpy()
